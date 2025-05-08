@@ -22,6 +22,13 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'A senha deve ter pelo menos 6 caracteres.' });
     }
 
+    const naoPermitidos = "#$%¨&*()[]\´~!.,/-+:°?-"
+    for(let char of nome){
+      if(naoPermitidos.includes(char)){
+        return res.status(400).json({ message: 'Nome não pode ter caracteres especiais.' });
+      }
+    }
+
     // Limpa o número do WhatsApp (remove +, (), espaços etc.)
     whatsapp = whatsapp.replace(/\D/g, '');
 
