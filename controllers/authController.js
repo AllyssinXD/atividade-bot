@@ -25,7 +25,7 @@ exports.register = async (req, res) => {
     const naoPermitidos = "#$%¨&*()[]\´~!.,/-+:°?-"
     for(let char of nome){
       if(naoPermitidos.includes(char)){
-        return res.status(400).json({ message: 'Nome não pode ter caracteres especiais.' });
+        return res.status(400).json({ message: 'Nome não pode conter caracteres especiais.' });
       }
     }
 
@@ -60,7 +60,7 @@ exports.register = async (req, res) => {
       token: crypto.randomBytes(32).toString("hex")
     });
 
-    const url = `${process.env.HOST}/usuario/${user._id}/verificar/${emailToken.token}`;
+    const url = `${process.env.HOST}/usuario/${emailToken.user}/verificar/${emailToken.token}`
 
     emailService.sendEmail(user.email, "Verifique seu Email", " Seu link de verificação ",
       `<h1> Olá! Você criou uma conta na Notifiq! </h1>
@@ -93,14 +93,12 @@ exports.login = async (req, res) => {
       const emailToken = await EmailToken.findOne({user: user._id})
 
       if(!emailToken){
-        console.log("Novo email token criado")
-
         const newEmailToken = await EmailToken.create({
           user: user._id,
           token: crypto.randomBytes(32).toString("hex")
         })
 
-        const url = `${process.env.HOST}/usuario/${user._id}/verificar/${newEmailToken.token}`
+        const url = `${process.env.HOST}/usuario/${newEmailToken.user}/verificar/${newEmailToken.token}`
 
         emailService.sendEmail(user.email, "Verifique seu Email", " Seu link de verificação ", 
           `<h1> Olá! Você criou uma conta na Notifiq! </h1>

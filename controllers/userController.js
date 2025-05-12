@@ -25,6 +25,8 @@ exports.verifyUser = async (req, res)=>{
             console.log("Erro ao validar usuário : Id do usuário ou token não foi passado na url")
             return res.status(404).json({message: "Link invalido"})
         }
+
+        console.log(userId, token)
         
         const user = await User.findOne({_id: userId})
         if(!user) {
