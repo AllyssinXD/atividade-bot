@@ -11,6 +11,7 @@ const authRoutes = require('./routes/authRoutes');
 const turmaRoutes = require('./routes/turmaRoutes');
 const atividadeRoutes = require('./routes/atividadeRoutes');
 const postsPublicosRoutes = require('./routes/PostPublicoRoutes');
+const replyRoutes = require('./routes/replyRoutes');
 const getWhatsappRouter = require('./routes/whatsappRoutes');
 const whatsappNotificationRoutes = require('./routes/whatsappNotificationRoutes') 
 
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/turmas', turmaRoutes);
 app.use('/api/atividades', atividadeRoutes);
 app.use('/api/publicPosts', postsPublicosRoutes);
+app.use('/api/reply', replyRoutes);
 app.use('/api/whatsapp', getWhatsappRouter())
 app.use('/api/whatsappNotifications', whatsappNotificationRoutes)
 

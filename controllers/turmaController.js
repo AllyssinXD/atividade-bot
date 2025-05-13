@@ -91,3 +91,43 @@ exports.listarTurmas = async (req, res) => {
     res.status(500).json({ message: 'Erro ao listar turmas.', error: error.message });
   }
 };
+
+exports.deletarTurma = async (req, res) => {
+  try {
+    const turmaId = req.params.turmaId;
+    const liderId = req.user.id; // Pegamos do token (middleware)
+
+    const turma = await Turma.findById(turmaId);
+    if (!turma) return res.status(404).json({ message: 'Nenhuma turma encontrada com esse id.' });
+
+    if (!turma.liderId.equals(liderId)) return res.status(403).json({ message: 'Você não é o líder dessa turma.' });
+
+    await Turma.deleteOne({ _id: turmaId });
+
+    res.status(200).json({ message: 'Turma deletada com sucesso.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao deletar turma.', error: error.message });
+  }
+}
+
+exports.sairTurma = async (req, res) => {
+  try {
+    const turmaId = req.params.turmaId;
+    const alunoId = req.user.id; // Pegamos do token (middleware)
+
+    const aluno = await User.findOne({_id: alunoId});
+    if(!aluno) return res.status(404).json({ message: 'Erro ao sair da turma : Aluno não encontrado'})
+
+    let turma = await Turma.findById(turmaId);
+    if (!turma) return res.status(404).json({ message: 'Nenhuma turma encontrada com esse id.' });
+
+    if (!turma.alunos.includes(alunoId)) return res.status(400).json({ message: 'Você não faz parte dessa turma.' });
+
+    turma.alunos = turma.alunos.filter(aluno => aluno != alunoId);
+    await turma.save();
+
+    res.status(200).json({ message: 'Você saiu da turma com sucesso.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao sair da turma.', error: error.message });
+  }
+};
