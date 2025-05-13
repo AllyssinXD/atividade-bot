@@ -1,5 +1,5 @@
-import PostReply from '../models/PostReply.js';
-import Post from '../models/PublicPost.js';
+const PostReply = require('../models/PostReply.js');
+const Post = require('../models/PublicPost.js');
 
 export const createReply = async (req, res) => {
     try {
