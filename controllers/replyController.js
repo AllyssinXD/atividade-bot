@@ -1,7 +1,7 @@
 const PostReply = require('../models/PostReply.js');
 const Post = require('../models/PublicPost.js');
 
-export const createReply = async (req, res) => {
+exports.createReply = async (req, res) => {
     try {
         const { postId, content } = req.body;
         const userId = req.user.id;
@@ -33,7 +33,7 @@ export const createReply = async (req, res) => {
     }
 }
 
-export const getReplies = async (req, res) => {
+exports.getReplies = async (req, res) => {
     try {
         const { postId } = req.params;
 
