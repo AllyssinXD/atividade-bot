@@ -98,7 +98,9 @@ exports.login = async (req, res) => {
           token: crypto.randomBytes(32).toString("hex")
         })
 
-        newEmailToken.save();
+        await newEmailToken.save();
+
+        console.log(newEmailToken)
         
         const url = `${process.env.HOST}/usuario/${newEmailToken.user}/verificar/${newEmailToken.token}`
 
