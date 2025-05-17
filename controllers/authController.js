@@ -93,11 +93,13 @@ exports.login = async (req, res) => {
       const emailToken = await EmailToken.findOne({user: user._id})
 
       if(!emailToken){
-        const newEmailToken = await EmailToken.create({
+        const newEmailToken = new EmailToken({
           user: user._id,
           token: crypto.randomBytes(32).toString("hex")
         })
 
+        newEmailToken.save();
+        
         const url = `${process.env.HOST}/usuario/${newEmailToken.user}/verificar/${newEmailToken.token}`
 
         emailService.sendEmail(user.email, "Verifique seu Email", " Seu link de verificação ", 
