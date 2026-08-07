@@ -3,15 +3,16 @@ const authMiddleware = require('../middlewares/authMiddleware')
 
 const WhatsappCode = require('../models/WhatsappCode')
 const User = require('../models/User')
+const whatsappService = require('../services/whatsappService')
 
 const { customAlphabet } = require('nanoid');
 
 const generateCodigo = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 6);
 
-function getWhatsappRouter(client){
-    const router = express.Router();
+const router = express.Router();
 
-    router.post("/send-code", authMiddleware, async (req, res)=>{
+router.post("/send-code", authMiddleware, async (req, res)=>{
+    try{
         const userId = req.user.id
 
         const user = await User.findById(userId)
@@ -20,10 +21,9 @@ function getWhatsappRouter(client){
         let whatsappCode = await WhatsappCode.findOne({user: userId})
         if(!whatsappCode) {
             whatsappCode = await WhatsappCode.create({ user: userId, codigo: generateCodigo() })
-            
-            const whatsapp = user.whatsapp.replaceAll(' ', '').replaceAll('+', '')
-            console.log("Enviou mensagem para : " + whatsapp)
-            client.sendText(whatsapp + '@c.us', `Olá ${user.nome}! Aqui está seu código de verificação : ${whatsappCode.codigo}. \n\n Se você não fez uma conta, por favor, ignore esta mensagem.`)
+
+            await whatsappService.sendMessage(user.whatsapp, `Olá ${user.nome}! Aqui está seu código de verificação : ${whatsappCode.codigo}. \n\n Se você não fez uma conta, por favor, ignore esta mensagem.`)
+            console.log("Enviou código para : " + user.whatsapp)
 
             return res.status(200).json({ message: 'Codigo enviado.' })
         }
@@ -34,45 +34,43 @@ function getWhatsappRouter(client){
         const minutes = ( now - createdAt ) / 1000 / 60
 
         if(minutes <= 5) return res.status(400).json({ message: 'Aguarde alguns minutos para enviar novamente' })
-        
+
         await WhatsappCode.deleteOne({_id: whatsappCode._id })
-        whatsappCode = whatsappCode = await WhatsappCode.create({ user: userId, codigo: generateCodigo() })
+        whatsappCode = await WhatsappCode.create({ user: userId, codigo: generateCodigo() })
 
-        const whatsapp = user.whatsapp.replaceAll(' ', '').replaceAll('+', '')
-
-        console.log("Enviou mensagem para : " + whatsapp)
-        client.sendText(whatsapp + '@c.us', `Olá ${user.nome}! Aqui está seu código de verificação : ${whatsappCode.codigo}. \n\n Se você não fez uma conta, por favor, ignore esta mensagem.`)
+        await whatsappService.sendMessage(user.whatsapp, `Olá ${user.nome}! Aqui está seu código de verificação : ${whatsappCode.codigo}. \n\n Se você não fez uma conta, por favor, ignore esta mensagem.`)
+        console.log("Enviou código para : " + user.whatsapp)
 
         return res.status(200).json({ message: 'Codigo enviado.' })
-    })
+    } catch (error) {
+        return res.status(400).json({ message: 'Erro ao enviar código: ' + error.message })
+    }
+})
 
-    router.post("/verify-code", authMiddleware, async (req, res)=>{
-        try{
-            const userId = req.user.id
-            const {codigo} = req.body
+router.post("/verify-code", authMiddleware, async (req, res)=>{
+    try{
+        const userId = req.user.id
+        const {codigo} = req.body
 
-            if(!codigo) return res.status(400).json({ message: 'Codigo não pode estar vazio.' })
+        if(!codigo) return res.status(400).json({ message: 'Codigo não pode estar vazio.' })
 
-            const user = await User.findById(userId)
+        const user = await User.findById(userId)
 
-            const whatsappCode = await WhatsappCode.findOne({user: user._id})
-            
-            if(!whatsappCode) return res.status(400).json({ message: 'Codigo ainda não foi enviado.' })
-            if(whatsappCode.codigo != codigo) return res.status(400).json({ message: 'Codigo não coincide.' })
+        const whatsappCode = await WhatsappCode.findOne({user: user._id})
 
-            await WhatsappCode.deleteOne({_id: whatsappCode._id})
-            user.whatsappVerificado = true
-            await user.save()
+        if(!whatsappCode) return res.status(400).json({ message: 'Codigo ainda não foi enviado.' })
+        if(whatsappCode.codigo != codigo) return res.status(400).json({ message: 'Codigo não coincide.' })
 
-            client.sendText(user.whatsapp + '@c.us', `* Seu whatsapp foi verificado com sucesso! * Agora você poderá receber notificações de atividades próximas.`)
+        await WhatsappCode.deleteOne({_id: whatsappCode._id})
+        user.whatsappVerificado = true
+        await user.save()
 
-            return res.status(200).json({message: 'Whatsapp verificado.'})
-        } catch(error) {
-            return res.status(400).json({ message: 'Erro ao verificar whatsapp. ' + error.message })
-        }
-    })
+        await whatsappService.sendMessage(user.whatsapp, `* Seu whatsapp foi verificado com sucesso! * Agora você poderá receber notificações de atividades próximas.`)
 
-    return router
-}
+        return res.status(200).json({message: 'Whatsapp verificado.'})
+    } catch(error) {
+        return res.status(400).json({ message: 'Erro ao verificar whatsapp. ' + error.message })
+    }
+})
 
-module.exports = getWhatsappRouter
+module.exports = router

@@ -5,6 +5,7 @@ const router = express.Router();
 const atividadeController = require('../controllers/atividadeController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
+router.get("/", authMiddleware, atividadeController.pegarAgenda);
 router.get("/:turmaId", authMiddleware, atividadeController.pegarAtividades);
 router.get('/:turmaId/:atividadeId', authMiddleware, atividadeController.pegarAtividade)
 router.patch('/entregar/:atividadeId', authMiddleware, atividadeController.entregarAtividade)

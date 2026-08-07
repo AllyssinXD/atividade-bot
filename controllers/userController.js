@@ -126,3 +126,35 @@ exports.update = async (req, res) => {
         return res.status(400).json({message: "Erro ao atualizar usuário " + error.message})
     }
 }
+
+exports.uploadProfilePic = async (req, res) => {
+    try{
+        const userId = req.user.id
+        const { profilePicUrl } = req.body
+
+        if(!profilePicUrl) return res.status(400).json({message: "Foto de perfil não fornecida"})
+
+        const match = profilePicUrl.match(/^data:image\/(png|jpe?g|webp);base64,(.+)$/)
+        if(!match) return res.status(400).json({message: "Formato de imagem inválido. Use PNG, JPEG ou WebP em base64."})
+
+        const base64Data = match[2]
+        const sizeInBytes = Buffer.from(base64Data, 'base64').length
+
+        if(sizeInBytes > 2 * 1024 * 1024) {
+            return res.status(400).json({message: "Imagem muito grande. Limite de 2MB."})
+        }
+
+        const user = await User.findById(userId)
+
+        if(!user) return res.status(404).json({message: "Não há usuário com esse id"})
+
+        user.profilePicUrl = profilePicUrl
+        await user.save()
+
+        const updatedUser = await User.findById(userId).select("-senhaHash")
+
+        return res.status(200).json(updatedUser)
+    } catch (error) {
+        return res.status(400).json({message: "Erro ao atualizar foto de perfil : " + error.message})
+    }
+}

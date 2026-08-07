@@ -3,7 +3,7 @@ const User = require("../models/User");
 
 exports.listarPosts = exports.criarPostPublico = async (req, res) => {
   try {
-    const publicPosts = await PublicPost.find({}).sort({ createdAt: -1 }).populate("likes", "nome email").populate("userId", "nome")
+    const publicPosts = await PublicPost.find({}).sort({ createdAt: -1 }).populate("likes", "nome email").populate("userId", "nome permissions profilePicUrl")
 
     res.status(201).json(publicPosts);
   } catch (error) {
@@ -21,7 +21,7 @@ exports.criarPost = async (req, res) => {
     if(!user) return res.status(404).json({ message: 'Usuário que cria post é inexistente'});
     if(!titulo || !conteudo) return res.status(400).json({ message: 'Titulo ou conteúdo vázio'});
 
-    const publicPost = await (await (await PublicPost.create({titulo, conteudo, userId})).populate("likes", "nome")).populate("userId", "nome")
+    const publicPost = await (await (await PublicPost.create({titulo, conteudo, userId})).populate("likes", "nome")).populate("userId", "nome permissions profilePicUrl")
 
     res.status(201).json(publicPost);
   } catch (error) {
@@ -67,7 +67,7 @@ exports.likePost = async (req, res) => {
     await post.save();
 
     let newPost = await post.populate("likes", "nome");
-    newPost = await post.populate("userId", "nome")
+    newPost = await post.populate("userId", "nome permissions profilePicUrl")
 
     res.status(201).json(newPost);
   } catch (error) {
